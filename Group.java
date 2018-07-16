@@ -74,6 +74,18 @@ public class Group implements Component {
         AdminView.notifyModelChange("", group.getID());
     }
 
+    public static User getUser(Group parent, String userID){
+        for(Component component : parent.getComponents()){
+            if(component instanceof Group){
+                return getUser((Group)component, userID);
+            }
+            else if(component instanceof User && component.getID().equals(userID)){
+                return (User) component;
+            }
+        }
+        return null;
+    }
+
     public static Group getRoot(){
         return root;
     }

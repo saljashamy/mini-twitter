@@ -1,7 +1,10 @@
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Controller {
     private AdminView view;
+    private static List<UserView> userViews = new ArrayList<UserView>();
     public Controller(){
         view = AdminView.getInstance();
     }
@@ -39,7 +42,19 @@ public class Controller {
         if(!User.userIDs.contains(userInput)) {
             System.out.println("User does not exist");
         }
+        else{
+            User user = Group.getUser(Group.getRoot(), userInput);
+            UserView userview = new UserView(user);
+            userViews.add(userview);
+        }
+    }
 
+    public static void followUser(User user, String otherUserID){
+        User otherUser = Group.getUser(Group.getRoot(), otherUserID);
+        user.addFollowing(otherUser);
+        for(UserView userView: userViews ){
+            userView.updateFollowers();
+        }
     }
 
 }

@@ -46,6 +46,14 @@ public class User implements Component, Observable, Observer {
         }
     }
 
+    public List<String> getFeed(){
+        return feed;
+    }
+
+    public List<User> getFollowers() {
+        return followers;
+    }
+
     @Override
     public void update(User user){
         feed.add(user.getLatestTweet());
