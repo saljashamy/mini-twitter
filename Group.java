@@ -2,12 +2,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-public class Group implements Component {
+public class Group implements Component, VisitableNode {
+
     public static HashSet<String> groupIDs = new HashSet<>();
     private static Group root = new Group("root");
-    private static int groupCount = 0;
 
-    private Group group = null;
     private String id;
     private List<Component> components = new ArrayList<>();
 
@@ -18,7 +17,6 @@ public class Group implements Component {
         else{
             setID(id);
             groupIDs.add(id);
-            groupCount++;
         }
     }
 
@@ -36,54 +34,52 @@ public class Group implements Component {
             root.addComponent((Component)user);
         }
         else{
-            for(Component component : root.getComponents()){
-                if(component instanceof Group && component.getID().equals(groupNode)){
-                    groupCount++;
-                    ((Group) component).addComponent((Component)user);
-                    break;
-                }
-            }
+            Group parentGroup = getGroup(root, groupNode);
+            parentGroup.addComponent(user);
         }
-        AdminView.notifyModelChange(user.getID(), "");
+        AdminView.notifyModelChange();
     }
 
     public static void groupUserChange(String groupNode, String groupID, String userID){
         User user = new User(userID);
         Group group = new Group(groupID);
         group.addComponent(user);
-        for(Component component : root.getComponents()){
-            if(component instanceof Group && component.getID().equals(groupNode)){
-                groupCount++;
-                ((Group) component).addComponent((Component)group);
-                break;
-            }
+        if(groupNode.equals("root")){
+            root.addComponent(group);
         }
-        AdminView.notifyModelChange(user.getID(), group.getID());
+        else{
+            Group parentGroup = getGroup(root, groupNode);
+            parentGroup.addComponent(group);
+        }
+        AdminView.notifyModelChange();
     }
 
-
-    public static void groupChange(String groupNode, String groupID){
-        Group group = new Group(groupID);
-        for(Component component : root.getComponents()){
-            if(component instanceof Group && component.getID().equals(groupNode)){
-                groupCount++;
-                ((Group) component).addComponent((Component)group);
-                break;
-            }
-        }
-        AdminView.notifyModelChange("", group.getID());
-    }
-
-    public static User getUser(Group parent, String userID){
+    public static Group getGroup(Group parent, String groupID){
         for(Component component : parent.getComponents()){
-            if(component instanceof Group){
-                return getUser((Group)component, userID);
+            if(component instanceof Group && component.getID().equals(groupID)){
+                return (Group) component;
             }
-            else if(component instanceof User && component.getID().equals(userID)){
-                return (User) component;
+            else if(component instanceof Group){
+                Group group = getGroup((Group) component, groupID);
+                if(group != null){
+                    return group;
+                }
             }
         }
         return null;
+    }
+
+    public static User getUser(Group parent, String userID){
+        User user = null;
+        for(Component component : parent.getComponents()){
+            if(component instanceof Group){
+                user = getUser((Group)component, userID);
+            }
+            else if(component instanceof User && component.getID().equals(userID)){
+                user =  (User) component;
+            }
+        }
+        return user;
     }
 
     public static Group getRoot(){
@@ -97,5 +93,10 @@ public class Group implements Component {
     @Override
     public String getID(){
         return id;
+    }
+
+    @Override
+    public int accept(NodeVistor visitor) {
+        return visitor.visit(this);
     }
 }

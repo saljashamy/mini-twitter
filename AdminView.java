@@ -1,13 +1,14 @@
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.List;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Enumeration;
+import java.util.List;
 
 
 public class AdminView extends JFrame {
@@ -67,8 +68,7 @@ public class AdminView extends JFrame {
         adminPanel.add(treePanel, gbc);
 
         // Group User Tree
-        Group root = Group.getRoot();
-        DefaultMutableTreeNode rootNode = getNodes(new DefaultMutableTreeNode("root"), root);
+        DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode("root");
         tree = new JTree(rootNode);
         for (int i = 0; i < tree.getRowCount(); i++) {
             tree.expandRow(i);
@@ -214,7 +214,7 @@ public class AdminView extends JFrame {
 
         adminWindow.add(adminPanel);
         adminWindow.setVisible(true);
-        adminWindow.setSize(600, 400);
+        adminWindow.setSize(700, 500);
     }
 
     private void setListeners(){
@@ -273,19 +273,19 @@ public class AdminView extends JFrame {
         userTotal.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                Controller.requestTotalUsers(true);
             }
         });
         groupTotal.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                Controller.requestTotalGroups(true);
             }
         });
         messageTotal.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                Controller.requestTotalMessages(true);
             }
         });
     }
@@ -299,32 +299,42 @@ public class AdminView extends JFrame {
         }
     }
 
-    public static void notifyModelChange(String userID, String groupID){
+    public static void notifyModelChange(){
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-        DefaultMutableTreeNode node = groupNode;
-        DefaultMutableTreeNode child = new DefaultMutableTreeNode(groupID);
-        if(!groupID.equals("")){
-            model.insertNodeInto(child, node, node.getChildCount());
-            tree.scrollPathToVisible(new TreePath(child.getPath()));
-            tree.addTreeSelectionListener(listener());
-            node = child;
+        Group root = Group.getRoot();
+        if(!groupNodeText.equals("root")) {
+            root = Group.getGroup(root, groupNodeText);
         }
-        child = new DefaultMutableTreeNode(userID);
-        model.insertNodeInto(child, node, node.getChildCount());
-        tree.scrollPathToVisible(new TreePath(child.getPath()));
-        tree.addTreeSelectionListener(listener());
+        updateJTree(model, groupNode, root);
+        for (int i = 0; i < tree.getRowCount(); i++) {
+            tree.expandRow(i);
+        }
+        tree.revalidate();
     }
 
-    public static DefaultMutableTreeNode getNodes(DefaultMutableTreeNode parent, Group group){
+    public static void updateJTree(DefaultTreeModel model, DefaultMutableTreeNode parent, Group group){
         List<Component> components = group.getComponents();
         for(Component component: components){
-            DefaultMutableTreeNode node = new DefaultMutableTreeNode(component.getID());
-            parent.add(node);
-            if(component instanceof Group){
-                getNodes(node, (Group)component);
+            String nodeID = component.getID();
+            DefaultMutableTreeNode child = new DefaultMutableTreeNode(nodeID);
+            if(component instanceof Group && !childExists(parent, nodeID)){
+                model.insertNodeInto(child, parent, parent.getChildCount());
+                tree.expandPath(new TreePath(model.getPathToRoot(child.getParent())));
+                tree.scrollPathToVisible(new TreePath(child.getPath()));
+                tree.addTreeSelectionListener(listener());
+                updateJTree(model, child, (Group)component);
+            }
+
+            else if(component instanceof Group && childExists(parent, nodeID)){
+                updateJTree(model, child, (Group)component);
+            }
+            else if(component instanceof User && !childExists(parent, nodeID)) {
+                model.insertNodeInto(child, parent, parent.getChildCount());
+                tree.expandPath(new TreePath(model.getPathToRoot(child.getParent())));
+                tree.scrollPathToVisible(new TreePath(child.getPath()));
+                tree.addTreeSelectionListener(listener());
             }
         }
-        return parent;
     }
 
     public static TreeSelectionListener listener() {
@@ -349,6 +359,18 @@ public class AdminView extends JFrame {
             }
         };
         return objTreeListener;
+    }
+
+    // reference: https://stackoverflow.com/questions/8210630/how-to-search-a-particular-node-in-jtree-and-make-that-node-expanded
+    private static boolean childExists(DefaultMutableTreeNode root, String s) {
+        Enumeration<DefaultMutableTreeNode> e = root.depthFirstEnumeration();
+        while (e.hasMoreElements()) {
+            DefaultMutableTreeNode node = e.nextElement();
+            if (node.toString().equalsIgnoreCase(s)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

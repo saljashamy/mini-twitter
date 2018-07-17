@@ -1,9 +1,9 @@
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
-public class User implements Component, Observable, Observer {
+public class User implements Component, Observable, Observer, VisitableNode {
     public static HashSet<String> userIDs = new HashSet<String>();
-    private static int userCount = 0;
-    private static int messageCount = 0;
 
     private String id;
     private List<User> following = new ArrayList<User>();
@@ -18,7 +18,6 @@ public class User implements Component, Observable, Observer {
         else{
             setID(id);
             userIDs.add(id);
-            this.userCount++;
         }
     }
 
@@ -29,7 +28,6 @@ public class User implements Component, Observable, Observer {
             userView.notifyFollowingChange();
         }
     }
-
 
     public List<User> getFollowing() {
         return following;
@@ -48,14 +46,15 @@ public class User implements Component, Observable, Observer {
     public void tweet(String tweet, List<UserView> userViews){
         currentTweet = tweet;
         feed.add(new String[]{getID(),tweet});
-        messageCount++;
         for(User user:  getFollowers()){
             user.update(this);
-            messageCount++;
         }
         for(UserView userView: userViews){
             userView.notifyTweetChange();
         }
+    }
+    public String getLatestTweet(){
+        return currentTweet;
     }
 
     public  List<String[]> getFeed(){
@@ -67,10 +66,6 @@ public class User implements Component, Observable, Observer {
         feed.add(new String[]{user.getID(), user.getLatestTweet()});
     }
 
-    public String getLatestTweet(){
-        return currentTweet;
-    }
-
     public void setID(String id){
         this.id = id;
     }
@@ -78,5 +73,10 @@ public class User implements Component, Observable, Observer {
     @Override
     public String getID(){
         return id;
+    }
+
+    @Override
+    public int accept(NodeVistor visitor){
+        return visitor.visit(this);
     }
 }

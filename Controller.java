@@ -15,6 +15,7 @@ public class Controller {
         }
         else if(groupNode.equals(groupInput)){
             Group.userChange(groupNode, userInput);
+            requestTotalUsers(false);
         }
         else{
             if(Group.groupIDs.contains(groupInput)){
@@ -22,6 +23,8 @@ public class Controller {
                 return;
             }
             addGroupUser(groupNode, groupInput, userInput);
+            requestTotalUsers(false);
+            requestTotalGroups(false);
         }
     }
 
@@ -35,6 +38,8 @@ public class Controller {
             return;
         }
         Group.groupUserChange(groupNode, groupInput, userInput);
+        requestTotalUsers(false);
+        requestTotalGroups(false);
     }
 
     public static void requestUserView(String userInput){
@@ -55,7 +60,64 @@ public class Controller {
 
     public static void postTweet(User user, String tweet){
         user.tweet(tweet, userViews);
+        requestTotalMessages(false);
     }
 
+    public static void requestTotalUsers(boolean display){
+        NodeVistor vistor = new Analysis();
+        Group root = Group.getRoot();
+        int totalUsers = 0;
+        totalUsers = getTotalUsers(vistor, root, totalUsers);
+        AnalysisView.getTotalUsersViewInstance("Total Users:", totalUsers, display);
+    }
 
+    private static int getTotalUsers(NodeVistor visitor, Group parent, int count) {
+        for (Component component : parent.getComponents()) {
+            if (component instanceof Group) {
+                count += getTotalUsers(visitor, (Group) component, 0);
+            } else if (component instanceof User) {
+                ((User) component).accept(visitor);
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public static void requestTotalGroups(boolean display){
+        NodeVistor vistor = new Analysis();
+        Group root = Group.getRoot();
+        int totalGroups = 1;
+        totalGroups = getTotalGroups(vistor, root, totalGroups);
+        AnalysisView.getTotalGroupsViewInstance("Total Groups:", totalGroups, display);
+    }
+
+    private static int getTotalGroups(NodeVistor visitor, Group parent, int count) {
+        for (Component component : parent.getComponents()) {
+            if (component instanceof Group) {
+                count++;
+                count += getTotalGroups(visitor, (Group) component, 0);
+            }
+        }
+        return count;
+    }
+
+    public static void requestTotalMessages(boolean display){
+        NodeVistor vistor = new Analysis();
+        Group root = Group.getRoot();
+        int totalMessages = 0;
+        totalMessages = getTotalMessages(vistor, root, totalMessages);
+        AnalysisView.getTotalMessagesViewInstance("Total Messages:", totalMessages, display);
+    }
+
+    private static int getTotalMessages(NodeVistor visitor, Group parent, int count) {
+        for (Component component : parent.getComponents()) {
+            if (component instanceof Group) {
+                count += getTotalUsers(visitor, (Group) component, 0);
+            } else if (component instanceof User) {
+                count += ((User) component).accept(visitor);
+
+            }
+        }
+        return count;
+    }
 }
