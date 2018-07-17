@@ -20,6 +20,9 @@ public class UserView {
     private JPanel tweetPanel;
     private JPanel feedPanel;
 
+    private JScrollPane scrollFollowing;
+    private JScrollPane scrollFeed;
+
     public UserView(User user){
         this.user = user;
 
@@ -83,10 +86,10 @@ public class UserView {
         userPanel.add(followingPanel, gbc);
 
         // Following Text Area
-        List<User> followingList = user.getFollowers();
+        List<User> followingList = user.getFollowing();
         String followingText = "Following:\n";
         for(User u : followingList){
-            followingText += "- " + u.getID();
+            followingText += "- " + u.getID() + "\n";
         }
         following = new JTextArea();
         following.setText(followingText);
@@ -96,7 +99,8 @@ public class UserView {
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
-        followingPanel.add(following, gbc);
+        scrollFollowing = new JScrollPane(following);
+        followingPanel.add(scrollFollowing, gbc);
 
         /*
            Tweet Panel
@@ -147,10 +151,10 @@ public class UserView {
         userPanel.add(feedPanel, gbc);
 
         // Feed Text Area
-        List<String> feedList = user.getFeed();
+        List<String[]> tweetFeed = user.getFeed();
         String feedText = "Feed:\n";
-        for(String f : feedList){
-            feedText += "- " + f;
+        for(String[] nameTweet: tweetFeed){
+            feedText += "[" + nameTweet[0] + "] " + nameTweet[1] + "\n";
         }
         feed = new JTextArea();
         feed.setText(feedText);
@@ -160,33 +164,51 @@ public class UserView {
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
-        feedPanel.add(feed, gbc);
+        scrollFeed = new JScrollPane(feed);
+        feedPanel.add(scrollFeed, gbc);
 
         setListeners();
 
         userWindow.add(userPanel);
         userWindow.setVisible(true);
-        userWindow.setSize(600, 400);
+        userWindow.setSize(700, 500);
     }
 
     private void setListeners() {
         followUser.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Controller.followUser(user, userID.getText());
+                Controller.followUser(user, userID.getText(), getInstance());
+            }
+        });
+        postTweet.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Controller.postTweet(user, tweet.getText());
             }
         });
     }
 
-    public void updateFollowers(){
-        List<User> followingList = user.getFollowers();
+    public void notifyFollowingChange(){
+        List<User> followingList = user.getFollowing();
         String followingText = "Following:\n";
         for(User u : followingList){
-            followingText += "- " + u.getID();
+            followingText += "- " + u.getID() + "\n";
         }
         System.out.println(followingText);
         following.setText(followingText);
-        userWindow.revalidate();
     }
 
+    public void notifyTweetChange(){
+        List<String[]> tweetFeed = user.getFeed();
+        String feedText = "Feed:\n";
+        for(String[] nameTweet: tweetFeed){
+            feedText += "[" + nameTweet[0] + "] " + nameTweet[1] + "\n";
+        }
+        feed.setText(feedText);
+    }
+
+    public UserView getInstance(){
+        return this;
+    }
 }

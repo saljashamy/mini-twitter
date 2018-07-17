@@ -1,10 +1,9 @@
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Controller {
     private AdminView view;
-    private static List<UserView> userViews = new ArrayList<UserView>();
+    private static List<UserView> userViews = new ArrayList<>();
     public Controller(){
         view = AdminView.getInstance();
     }
@@ -49,12 +48,14 @@ public class Controller {
         }
     }
 
-    public static void followUser(User user, String otherUserID){
+    public static void followUser(User user, String otherUserID, UserView userView){
         User otherUser = Group.getUser(Group.getRoot(), otherUserID);
-        user.addFollowing(otherUser);
-        for(UserView userView: userViews ){
-            userView.updateFollowers();
-        }
+        user.addFollowing(otherUser, userView);
     }
+
+    public static void postTweet(User user, String tweet){
+        user.tweet(tweet, userViews);
+    }
+
 
 }

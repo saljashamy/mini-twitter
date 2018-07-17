@@ -1,17 +1,14 @@
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class User implements Component, Observable, Observer {
     public static HashSet<String> userIDs = new HashSet<String>();
     private static int userCount = 0;
     private static int messageCount = 0;
 
-    private User user = null;
     private String id;
     private List<User> following = new ArrayList<User>();
     private List<User> followers = new ArrayList<User>();
-    private List<String> feed = new ArrayList<String>();
+    private List<String[]> feed = new ArrayList<>();
     private String currentTweet;
 
     public User(String id){
@@ -25,9 +22,17 @@ public class User implements Component, Observable, Observer {
         }
     }
 
-    public void addFollowing(User user){
-        following.add(user);
-        user.addFollower(this);
+    public void addFollowing(User user, UserView userView){
+        if(!following.contains(user) && this.getID() != user.getID()) {
+            following.add(user);
+            user.addFollower(this);
+            userView.notifyFollowingChange();
+        }
+    }
+
+
+    public List<User> getFollowing() {
+        return following;
     }
 
     @Override
@@ -35,28 +40,31 @@ public class User implements Component, Observable, Observer {
         followers.add(user);
     }
 
-    @Override
-    public void tweet(String tweet){
-        currentTweet = tweet;
-        feed.add(tweet);
-        messageCount++;
-        for(User user:  followers){
-            user.update(this);
-            messageCount++;
-        }
-    }
-
-    public List<String> getFeed(){
-        return feed;
-    }
-
     public List<User> getFollowers() {
         return followers;
     }
 
     @Override
+    public void tweet(String tweet, List<UserView> userViews){
+        currentTweet = tweet;
+        feed.add(new String[]{getID(),tweet});
+        messageCount++;
+        for(User user:  getFollowers()){
+            user.update(this);
+            messageCount++;
+        }
+        for(UserView userView: userViews){
+            userView.notifyTweetChange();
+        }
+    }
+
+    public  List<String[]> getFeed(){
+        return feed;
+    }
+
+    @Override
     public void update(User user){
-        feed.add(user.getLatestTweet());
+        feed.add(new String[]{user.getID(), user.getLatestTweet()});
     }
 
     public String getLatestTweet(){
