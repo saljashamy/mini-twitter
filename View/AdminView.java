@@ -1,3 +1,9 @@
+package View;
+
+import Controller.*;
+import Model.Composite.Component;
+import Model.*;
+
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -29,11 +35,15 @@ public class AdminView extends JFrame {
 
     private static JPanel userViewPanel;
     private static JButton openUserViewButton;
+    private static JLabel idValidationResult;
+    private static JLabel lastUpdateInfo;
 
     private static JPanel analysisPanel;
     private static JButton userTotal;
     private static JButton groupTotal;
     private static JButton messageTotal;
+    private static JButton validateIDs;
+    private static JButton lastUpdate;
 
     private static DefaultMutableTreeNode groupNode;
     private static DefaultMutableTreeNode userNode;
@@ -53,7 +63,7 @@ public class AdminView extends JFrame {
         adminPanel.setLayout(new GridBagLayout());
 
         /*
-            Group User Tree Panel
+            Group  User Tree Panel
         */
         treePanel = new JPanel();
         treePanel.setLayout(new GridBagLayout());
@@ -92,8 +102,8 @@ public class AdminView extends JFrame {
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 0;
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
         gbc.fill = GridBagConstraints.BOTH;
         adminPanel.add(addPanel, gbc);
 
@@ -140,7 +150,7 @@ public class AdminView extends JFrame {
         addPanel.add(addGroup, gbc);
 
         /*
-            User View.View Panel
+            User View Panel
         */
         userViewPanel = new JPanel();
         userViewPanel.setLayout(new GridBagLayout());
@@ -152,8 +162,9 @@ public class AdminView extends JFrame {
         gbc.fill = GridBagConstraints.BOTH;
         adminPanel.add(userViewPanel, gbc);
 
-        // User View.View Button
+        // User View Button
         openUserViewButton = new JButton();
+        openUserViewButton.setPreferredSize(new Dimension(40, 40));
         openUserViewButton.setText("Open User View");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -163,6 +174,27 @@ public class AdminView extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         userViewPanel.add(openUserViewButton, gbc);
 
+        idValidationResult = new JLabel("", SwingConstants.CENTER);
+        idValidationResult.setPreferredSize(new Dimension(40, 40));
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 1.0;
+        gbc.weighty = .2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        userViewPanel.add(idValidationResult, gbc);
+
+        lastUpdateInfo = new JLabel("", SwingConstants.CENTER);
+        lastUpdateInfo.setPreferredSize(new Dimension(40, 40));
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.weightx = 1.0;
+        gbc.weighty = .2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        userViewPanel.add(lastUpdateInfo, gbc);
+
+
         /*
             Analysis Panel
         */
@@ -171,13 +203,14 @@ public class AdminView extends JFrame {
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 2;
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
+        gbc.weightx = .5;
+        gbc.weighty = .5;
         gbc.fill = GridBagConstraints.BOTH;
         adminPanel.add(analysisPanel, gbc);
 
         // User Total Button
         userTotal = new JButton();
+        userTotal.setPreferredSize(new Dimension(40, 40));
         userTotal.setText("Show User Total");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -189,6 +222,7 @@ public class AdminView extends JFrame {
 
         // Group Total Button
         groupTotal = new JButton();
+        groupTotal.setPreferredSize(new Dimension(40, 40));
         groupTotal.setText("Show Group Total");
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
@@ -200,15 +234,35 @@ public class AdminView extends JFrame {
 
         // Message Total Button
         messageTotal = new JButton();
+        messageTotal.setPreferredSize(new Dimension(40, 40));
         messageTotal.setText("Show Message Total");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 1;
-        gbc.gridwidth = 2;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         analysisPanel.add(messageTotal, gbc);
+
+        validateIDs = new JButton();
+        validateIDs.setPreferredSize(new Dimension(40, 40));
+        validateIDs.setText("Validate IDs");
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        analysisPanel.add(validateIDs, gbc);
+
+        lastUpdate = new JButton();
+        lastUpdate.setPreferredSize(new Dimension(40, 40));
+        lastUpdate.setText("Last Update");
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        analysisPanel.add(lastUpdate, gbc);
 
         setListeners();
 
@@ -276,18 +330,35 @@ public class AdminView extends JFrame {
                 Controller.requestTotalUsers(true);
             }
         });
+
         groupTotal.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Controller.requestTotalGroups(true);
             }
         });
+
         messageTotal.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Controller.requestTotalMessages(true);
             }
         });
+
+        validateIDs.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Controller.requestValidateIDs();
+            }
+        });
+
+        lastUpdate.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Controller.requestLastUpdate();
+            }
+        });
+
     }
 
     public static AdminView getInstance(){
@@ -373,4 +444,15 @@ public class AdminView extends JFrame {
         return false;
     }
 
+    public static JTree getTree() {
+        return tree;
+    }
+
+    public static void setValidationField(String result){
+        idValidationResult.setText(result);
+    }
+
+    public static void setLastUpdateInfo(long time){
+        lastUpdateInfo.setText(new Long(time).toString());
+    }
 }

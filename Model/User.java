@@ -1,3 +1,12 @@
+package Model;
+
+import Model.Composite.Component;
+import Model.Observer.Observer;
+import Model.Observer.Observable;
+import Model.Visitor.NodeVisitor;
+import Model.Visitor.VisitableNode;
+import View.*;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -6,9 +15,11 @@ public class User implements Component, Observable, Observer, VisitableNode {
     public static HashSet<String> userIDs = new HashSet<String>();
 
     private String id;
+    private long timeCreated;
+    private long timeUpdated;
     private List<User> following = new ArrayList<User>();
     private List<User> followers = new ArrayList<User>();
-    private List<String[]> feed = new ArrayList<>();
+    private List<String[]> feed = new ArrayList<>(0);
     private String currentTweet;
 
     public User(String id){
@@ -18,6 +29,7 @@ public class User implements Component, Observable, Observer, VisitableNode {
         else{
             setID(id);
             userIDs.add(id);
+            setTimeCreated(System.currentTimeMillis());
         }
     }
 
@@ -45,6 +57,7 @@ public class User implements Component, Observable, Observer, VisitableNode {
     @Override
     public void tweet(String tweet, List<UserView> userViews){
         currentTweet = tweet;
+        timeUpdated = System.currentTimeMillis();
         feed.add(new String[]{getID(),tweet});
         for(User user:  getFollowers()){
             user.update(this);
@@ -66,7 +79,7 @@ public class User implements Component, Observable, Observer, VisitableNode {
         feed.add(new String[]{user.getID(), user.getLatestTweet()});
     }
 
-    public void setID(String id){
+    private void setID(String id){
         this.id = id;
     }
 
@@ -75,8 +88,22 @@ public class User implements Component, Observable, Observer, VisitableNode {
         return id;
     }
 
+    private void setTimeCreated(long time){ this.timeCreated = time; }
+
+    public long getTimeCreated(){return timeCreated; }
+
+    private void setTimeUpdated(long time){ this.timeUpdated = time; }
+
+    public long getTimeUpdated(){return timeUpdated; }
+
     @Override
-    public int accept(NodeVistor visitor){
+    public int accept(NodeVisitor visitor){
         return visitor.visit(this);
     }
+
+    @Override
+    public String acceptIDChecker(NodeVisitor visitor){ return visitor.visitID(this); }
+
+    @Override
+    public long acceptTimeUpdate(NodeVisitor visitor){ return visitor.visitUpdatedTime(this); }
 }
